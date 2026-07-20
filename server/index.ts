@@ -1,6 +1,10 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import { serve } from '@hono/node-server'
 import { app } from './app'
+
+if (!process.env.VERCEL) {
+  loadEnv()
+}
 
 const port = Number(process.env.API_PORT || 8787)
 
