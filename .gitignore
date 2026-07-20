@@ -20,6 +20,7 @@ stitch_responsive_web_app_implementation (1)/
 stitch_responsive_web_app_implementation (1).zip
 scripts/fix-app-encoding.mjs
 api/index.js
+api/index.cjs
 
 # Editor
 .vscode/*

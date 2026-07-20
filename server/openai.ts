@@ -194,7 +194,7 @@ Write in polished English editorial voice. headline should be magazine-worthy (n
       console.warn('Editorial schema mismatch, using mock', parsed.error)
       return offlineEditorial(video, 'en')
     }
-    return parsed.data
+    return parsed.data as MagazineEditorial
   } catch (err) {
     console.error('OpenAI editorial failed', err)
     markOpenAIUnavailable(err)
@@ -258,7 +258,13 @@ export async function generateDailyBrief(videos: VideoItem[]): Promise<{
     const raw = completion.choices[0]?.message?.content ?? '{}'
     const parsed = briefSchema.safeParse(JSON.parse(raw))
     if (!parsed.success) return fallback
-    return parsed.data
+    return parsed.data as {
+      headline: string
+      dek: string
+      notes: string[]
+      sentiment: number
+      velocity: number
+    }
   } catch (err) {
     console.error('OpenAI brief failed', err)
     markOpenAIUnavailable(err)
@@ -352,12 +358,14 @@ export async function translateEditorial(
     const parsed = editorialSchema.safeParse(JSON.parse(raw))
     if (!parsed.success) return offline()
     return {
-      ...parsed.data,
+      ...(parsed.data as MagazineEditorial),
       qualityScore: editorial.qualityScore,
-      bodySections: parsed.data.bodySections.map((s, i) => ({
-        ...s,
-        id: editorial.bodySections[i]?.id ?? s.id,
-      })),
+      bodySections: (parsed.data as MagazineEditorial).bodySections.map(
+        (s, i) => ({
+          ...s,
+          id: editorial.bodySections[i]?.id ?? s.id,
+        }),
+      ),
     }
   } catch (err) {
     console.error('translateEditorial failed', err)
@@ -424,9 +432,9 @@ export async function translateVideos(
 
   // Prefer offline pack for curated mock feed (also avoids burning OpenAI quota)
   const offline = applyOfflineVideoLocale(videos, locale)
-  const allOffline =
-    locale !== 'en' &&
-    videos.every((v) => offline.find((o) => o.id === v.id)?.title !== v.title)
+  const allOffline = videos.every(
+    (v) => offline.find((o) => o.id === v.id)?.title !== v.title,
+  )
   if (allOffline || !canUseOpenAI()) return offline
 
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
