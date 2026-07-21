@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/lib/auth'
 import { LocaleProvider } from '@/i18n/LocaleContext'
@@ -8,6 +8,7 @@ import { GlobalLoadingIndicator } from '@/components/GlobalLoadingIndicator'
 import { HomePage } from '@/pages/HomePage'
 import { BriefPage } from '@/pages/BriefPage'
 import { RankingsPage } from '@/pages/RankingsPage'
+import { ChannelRankingsPage } from '@/pages/ChannelRankingsPage'
 import { ArticlePage } from '@/pages/ArticlePage'
 import { SearchPage } from '@/pages/SearchPage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -40,7 +41,12 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/brief" element={<BriefPage />} />
-                <Route path="/rankings" element={<RankingsPage />} />
+                <Route path="/channels" element={<ChannelRankingsPage />} />
+                <Route path="/creators" element={<RankingsPage />} />
+                <Route
+                  path="/rankings"
+                  element={<Navigate to="/creators" replace />}
+                />
                 <Route path="/article/:videoId" element={<ArticlePage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/login" element={<LoginPage />} />

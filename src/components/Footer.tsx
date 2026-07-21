@@ -47,10 +47,16 @@ export function Footer() {
               {t('footer.brief')}
             </Link>
             <Link
-              to="/rankings"
+              to="/channels"
               className="font-body text-body-md text-text-muted transition-colors hover:text-accent-crimson"
             >
               {t('footer.rankings')}
+            </Link>
+            <Link
+              to="/creators"
+              className="font-body text-body-md text-text-muted transition-colors hover:text-accent-crimson"
+            >
+              {t('footer.creators')}
             </Link>
             <Link
               to="/search"

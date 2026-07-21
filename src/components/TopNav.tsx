@@ -14,7 +14,8 @@ export function TopNav() {
   const links = [
     { to: '/', label: t('nav.latest'), end: true },
     { to: '/brief', label: t('nav.intelligence') },
-    { to: '/rankings', label: t('nav.creators') },
+    { to: '/channels', label: t('nav.channels') },
+    { to: '/creators', label: t('nav.creators') },
     { to: '/search', label: t('nav.archive') },
   ]
 
@@ -32,14 +33,14 @@ export function TopNav() {
       }`}
     >
       <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-8 py-6">
-        <div className="flex items-center gap-8 md:gap-12">
+        <div className="flex items-center gap-8 lg:gap-12">
           <Link
             to="/"
             className="font-display text-headline-md font-black tracking-tighter text-primary transition-opacity hover:opacity-70"
           >
             YouTube Magazine AI
           </Link>
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-8 lg:flex">
             {links.map((link) => (
               <NavLink
                 key={link.to}
@@ -72,7 +73,7 @@ export function TopNav() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3 md:gap-5">
+        <div className="flex items-center gap-3 lg:gap-5">
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
@@ -86,13 +87,13 @@ export function TopNav() {
           </button>
           {isEditor ? (
             <>
-              <span className="hidden rounded-full bg-surface-container-low px-3 py-1 font-body text-label-sm uppercase tracking-widest text-accent-crimson md:inline">
+              <span className="hidden rounded-full bg-surface-container-low px-3 py-1 font-body text-label-sm uppercase tracking-widest text-accent-crimson lg:inline">
                 {t('role.editor')}
               </span>
               <button
                 type="button"
                 onClick={logout}
-                className="hidden rounded-DEFAULT border border-border-subtle px-6 py-3 font-body text-label-md uppercase tracking-widest md:block"
+                className="hidden rounded-DEFAULT border border-border-subtle px-6 py-3 font-body text-label-md uppercase tracking-widest lg:block"
               >
                 {t('nav.signOut')}
               </button>
@@ -100,15 +101,16 @@ export function TopNav() {
           ) : (
             <Link
               to="/login"
-              className="hidden rounded-DEFAULT bg-primary px-6 py-3 font-body text-label-md uppercase tracking-widest text-white transition-all hover:bg-opacity-90 md:block"
+              className="hidden rounded-DEFAULT bg-primary px-6 py-3 font-body text-label-md uppercase tracking-widest text-white transition-all hover:bg-opacity-90 lg:block"
             >
               {t('nav.editor')}
             </Link>
           )}
           <button
             type="button"
-            className="md:hidden"
+            className="lg:hidden"
             aria-label={t('common.menu')}
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
             <span className="material-symbols-outlined">
@@ -118,8 +120,8 @@ export function TopNav() {
         </div>
       </div>
       {menuOpen && (
-        <div className="border-t border-border-subtle bg-surface-pure px-8 py-4 md:hidden">
-          <div className="mb-4">
+        <div className="border-t border-border-subtle bg-surface-pure px-8 py-4 lg:hidden">
+          <div className="mb-4 sm:hidden">
             <LanguageSwitcher />
           </div>
           {links.map((link) => (
