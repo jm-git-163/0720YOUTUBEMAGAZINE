@@ -1,5 +1,5 @@
 import type { ChannelItem, RankedCreator, VideoItem } from './types'
-import { scoreChannelQuality } from './openai'
+import { scoreChannelsQuality } from './openai'
 import {
   ageInDays,
   dailyVelocityScore,
@@ -50,6 +50,14 @@ export async function rankCreators(
     videosByChannel.set(v.channelId, list)
   }
 
+  const gptScores = await scoreChannelsQuality(
+    channels.map((channel) => ({
+      id: channel.id,
+      title: channel.title,
+      description: channel.description ?? '',
+    })),
+  )
+
   const ranked: RankedCreator[] = []
 
   for (const channel of channels) {
@@ -61,10 +69,7 @@ export async function rankCreators(
     const velocity = top ? dailyVelocityScore(top) : 25
     const engagement = top ? engagementQualityScore(top) : 30
     const activity = uploadFrequencyScore(channel.videoCount)
-    const gptQuality = await scoreChannelQuality(
-      channel.title,
-      channel.description,
-    )
+    const gptQuality = gptScores[channel.id] ?? 75
 
     // Soft-downrank channels whose sample content is very old
     const agePenalty =

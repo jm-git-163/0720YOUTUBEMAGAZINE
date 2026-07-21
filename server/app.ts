@@ -1,6 +1,14 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { cached } from './cache'
+import {
+  BRIEF_TTL_MS,
+  EDITORIAL_TTL_MS,
+  FEED_TTL_MS,
+  SEARCH_TTL_MS,
+  VIDEO_TTL_MS,
+  YT_TRENDING_TTL_MS,
+  cached,
+} from './cache'
 import {
   generateDailyBrief,
   generateEditorial,
@@ -93,9 +101,9 @@ app.post('/api/auth/login', async (c) => {
 app.get('/api/home', async (c) => {
   const lang = normalizeLocale(c.req.query('lang'))
   try {
-    const payload = await cached(`home-feed-v8:${lang}`, 15 * 60_000, async () => {
-      const trendingRaw = await cached(`home-trending-v6:${lang}`, 15 * 60_000, () =>
-        trendingTechVideos(12, lang),
+    const payload = await cached(`home-feed-v9:${lang}`, FEED_TTL_MS, async () => {
+      const trendingRaw = await cached(`yt-trending-raw-v1`, YT_TRENDING_TTL_MS, () =>
+        trendingTechVideos(12),
       )
       const base = trendingRaw.filter((v) => !isVideoHidden(v.id))
       const trending = await translateVideos(base, lang)
@@ -123,9 +131,10 @@ app.get('/api/search', async (c) => {
   const q = c.req.query('q')?.trim() || 'AI'
   const lang = normalizeLocale(c.req.query('lang'))
   try {
-    const items = await cached(`search-v3:${q}:${lang}`, 8 * 60_000, async () => {
-      const raw = await cached(`search-raw-v2:${q}:${lang}`, 8 * 60_000, () =>
-        searchVideos(q, 18, { locale: lang, order: 'relevance' }),
+    const items = await cached(`search-v4:${q}:${lang}`, SEARCH_TTL_MS, async () => {
+      // Raw YouTube results shared across locales; only translation is per-lang.
+      const raw = await cached(`search-raw-v3:${q}`, SEARCH_TTL_MS, () =>
+        searchVideos(q, 18, { order: 'relevance' }),
       )
       const visible = raw.filter((v) => !isVideoHidden(v.id))
       return translateVideos(visible, lang)
@@ -150,7 +159,7 @@ app.get('/api/videos/:id', async (c) => {
     if (isVideoHidden(id) && !requireEditor(authHeader(c))) {
       return c.json({ error: 'Not found' }, 404)
     }
-    const video = await cached(`video:${id}`, 10 * 60_000, () => getVideo(id))
+    const video = await cached(`video:${id}`, VIDEO_TTL_MS, () => getVideo(id))
     if (!video) return c.json({ error: 'Not found' }, 404)
     return c.json(video)
   } catch (err) {
@@ -167,8 +176,8 @@ app.get('/api/rankings', async (c) => {
   const lang = normalizeLocale(c.req.query('lang'))
   try {
     const payload = await cached(
-      `rankings-v3:${category}:${lang}`,
-      15 * 60_000,
+      `rankings-v4:${category}:${lang}`,
+      FEED_TTL_MS,
       async () => {
         let items
         try {
@@ -225,10 +234,11 @@ app.get('/api/rankings', async (c) => {
 app.get('/api/brief', async (c) => {
   const lang = normalizeLocale(c.req.query('lang'))
   try {
-    const payload = await cached(`brief-v7:${lang}`, 30 * 60_000, async () => {
-      const digestRaw = await cached(`brief-digest-v5:${lang}`, 15 * 60_000, () =>
-        trendingTechVideos(9, lang),
+    const payload = await cached(`brief-v8:${lang}`, BRIEF_TTL_MS, async () => {
+      const trendingRaw = await cached(`yt-trending-raw-v1`, YT_TRENDING_TTL_MS, () =>
+        trendingTechVideos(12),
       )
+      const digestRaw = trendingRaw.slice(0, 9)
       const digestBase = digestRaw.filter((v) => !isVideoHidden(v.id))
       const digest = await translateVideos(digestBase, lang)
       const brief = await generateDailyBrief(digestBase)
@@ -281,10 +291,10 @@ app.post('/api/editorial/:videoId', async (c) => {
       const [editorial, video] = await Promise.all([
         cached(
           `editorial-override-v2:${videoId}:${lang}:${override.updatedAt}`,
-          30 * 60_000,
+          EDITORIAL_TTL_MS,
           () => translateEditorial(override.editorial, lang, videoRaw),
         ),
-        cached(`video-localized-v2:${videoId}:${lang}`, 30 * 60_000, async () => {
+        cached(`video-localized-v2:${videoId}:${lang}`, EDITORIAL_TTL_MS, async () => {
           const [v] = await translateVideos([videoRaw], lang)
           return v
         }),
@@ -301,12 +311,12 @@ app.post('/api/editorial/:videoId', async (c) => {
 
     const payload = await cached(
       `editorial-v4:${videoId}:${lang}`,
-      30 * 60_000,
+      EDITORIAL_TTL_MS,
       async () => {
         const videoRaw = await getVideo(videoId)
         if (!videoRaw) throw new Error('Video not found')
         const [baseEditorial, channel, localizedVideos] = await Promise.all([
-          cached(`editorial-base-v2:${videoId}`, 30 * 60_000, () =>
+          cached(`editorial-base-v2:${videoId}`, EDITORIAL_TTL_MS, () =>
             generateEditorial(videoRaw),
           ),
           videoRaw.channelId

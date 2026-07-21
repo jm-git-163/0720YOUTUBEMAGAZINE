@@ -279,19 +279,18 @@ export async function searchChannels(
 }
 
 /**
- * Desk curation for Home / Brief.
- * Uses ONE search call when possible to conserve YouTube daily quota (100/day).
+ * Shared desk feed for Home / Brief (language-agnostic).
+ * Uses ONE search call when possible — search.list costs 100 quota units.
+ * Locale display is handled by translateVideos; do not call this per-language.
  * On quota errors, falls back to curated mock so the magazine still renders.
- * `locale` biases YouTube region/language so KO/EN/JA feeds differ.
  */
-export async function trendingTechVideos(
-  maxResults = 12,
-  locale: SearchLocale = 'en',
-): Promise<VideoItem[]> {
+export async function trendingTechVideos(maxResults = 12): Promise<VideoItem[]> {
   if (!hasYouTubeKey()) {
     return curateMagazineFeed(mockVideos, maxResults)
   }
 
+  // Fixed EN desk query so KO/EN/JA share one YouTube raw cache.
+  const locale: SearchLocale = 'en'
   const loc = LOCALE_SEARCH[locale]
   const byId = new Map<string, VideoItem>()
   let quotaHit = false
@@ -314,7 +313,9 @@ export async function trendingTechVideos(
     console.warn('magazine primary search failed', err)
   }
 
-  if (byId.size < maxResults && !quotaHit) {
+  // Only burn a second search.list when primary is clearly short.
+  const needSecondary = byId.size < Math.ceil(maxResults * 0.6)
+  if (needSecondary && !quotaHit) {
     try {
       merge(
         await searchVideos(loc.secondary, 15, {

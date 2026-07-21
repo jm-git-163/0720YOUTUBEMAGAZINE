@@ -272,16 +272,27 @@ export async function generateDailyBrief(videos: VideoItem[]): Promise<{
   }
 }
 
-export async function scoreChannelQuality(
-  title: string,
-  description: string,
-): Promise<number> {
-  if (!hasOpenAIKey()) {
-    return 70 + Math.min(25, Math.floor(description.length / 40))
+export async function scoreChannelsQuality(
+  channels: { id: string; title: string; description: string }[],
+): Promise<Record<string, number>> {
+  const heuristic = (description: string) =>
+    70 + Math.min(25, Math.floor(description.length / 40))
+
+  const fallback: Record<string, number> = {}
+  for (const ch of channels) {
+    fallback[ch.id] = heuristic(ch.description)
   }
+
+  if (!channels.length || !canUseOpenAI()) return fallback
+
   try {
     const client = getClient()
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+    const payload = channels.map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      description: ch.description.slice(0, 400),
+    }))
     const completion = await client.chat.completions.create({
       model,
       temperature: 0.2,
@@ -289,17 +300,34 @@ export async function scoreChannelQuality(
       messages: [
         {
           role: 'user',
-          content: `Rate this YouTube channel's content quality 0-100 as JSON {"score": number}.\nTitle: ${title}\nDescription: ${description.slice(0, 800)}`,
+          content: `Rate each YouTube channel's content quality 0-100. Return JSON {"scores":[{"id":"...","score":number},...]}.\nChannels:\n${JSON.stringify(payload)}`,
         },
       ],
     })
     const raw = JSON.parse(completion.choices[0]?.message?.content ?? '{}') as {
-      score?: number
+      scores?: { id?: string; score?: number }[]
     }
-    return Math.max(0, Math.min(100, Number(raw.score ?? 75)))
-  } catch {
-    return 75
+    const out = { ...fallback }
+    for (const row of raw.scores ?? []) {
+      if (!row.id) continue
+      out[row.id] = Math.max(0, Math.min(100, Number(row.score ?? out[row.id] ?? 75)))
+    }
+    return out
+  } catch (err) {
+    markOpenAIUnavailable(err)
+    return fallback
   }
+}
+
+/** @deprecated Prefer scoreChannelsQuality for batch ranking. */
+export async function scoreChannelQuality(
+  title: string,
+  description: string,
+): Promise<number> {
+  const scores = await scoreChannelsQuality([
+    { id: '_', title, description },
+  ])
+  return scores._ ?? 75
 }
 
 export type AppLocale = 'ko' | 'en' | 'ja'
