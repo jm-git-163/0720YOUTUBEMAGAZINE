@@ -10,5 +10,8 @@
     "api/index.js": {
       "maxDuration": 60
     }
+  },
+  "env": {
+    "NODEJS_HELPERS": "0"
   }
 }
