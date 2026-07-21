@@ -1,4 +1,5 @@
 import type {
+  AnalyticsDashboardPayload,
   BriefPayload,
   EditorialPayload,
   HomePayload,
@@ -101,4 +102,8 @@ export const api = {
     }),
   deleteEditorial: (videoId: string) =>
     request<{ ok: boolean }>(`/api/editorial/${videoId}`, { method: 'DELETE' }),
+  analyticsDashboard: (month: string, lang = 'en') =>
+    request<AnalyticsDashboardPayload>(
+      `/api/analytics/dashboard?month=${encodeURIComponent(month)}&lang=${encodeURIComponent(lang)}`,
+    ),
 }

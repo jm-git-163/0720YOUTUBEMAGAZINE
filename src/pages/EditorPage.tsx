@@ -109,13 +109,21 @@ export function EditorPage() {
             {t('editor.subtitle')}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="border border-border-subtle px-6 py-3 font-body text-label-md uppercase tracking-widest"
-        >
-          {t('editor.signOut')}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/dashboard"
+            className="rounded-DEFAULT bg-primary px-6 py-3 font-body text-label-md uppercase tracking-widest text-white"
+          >
+            {t('nav.analytics')}
+          </Link>
+          <button
+            type="button"
+            onClick={logout}
+            className="border border-border-subtle px-6 py-3 font-body text-label-md uppercase tracking-widest"
+          >
+            {t('editor.signOut')}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2">

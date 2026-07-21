@@ -117,3 +117,41 @@ export interface SearchPayload {
   query: string
   items: VideoItem[]
 }
+
+export interface AnalyticsDashboardPayload {
+  month: string
+  goal: number
+  monthTotal: number
+  prevMonthTotal: number
+  momPct: number | null
+  uniquePages: number
+  peakDay: { day: number; date: string; total: number } | null
+  avgDaily: number
+  byType: { article: number; page: number; media: number }
+  topPageType: 'article' | 'page' | 'media' | null
+  goalProgress: number
+  neededPerDay: number
+  daysRemaining: number
+  today: number
+  yesterday: number
+  todayDeltaPct: number | null
+  persistent: boolean
+  days: {
+    day: number
+    date: string
+    total: number
+    article: number
+    page: number
+    media: number
+  }[]
+  topPosts: {
+    rank: number
+    contentId: string
+    title: string
+    views: number
+    contentType: 'article' | 'page' | 'media'
+    href?: string
+  }[]
+  summary: string[]
+  locale: string
+}

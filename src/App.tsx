@@ -5,6 +5,7 @@ import { LocaleProvider } from '@/i18n/LocaleContext'
 import { TopNav } from '@/components/TopNav'
 import { Footer } from '@/components/Footer'
 import { GlobalLoadingIndicator } from '@/components/GlobalLoadingIndicator'
+import { AnalyticsBeacon } from '@/components/AnalyticsBeacon'
 import { HomePage } from '@/pages/HomePage'
 import { BriefPage } from '@/pages/BriefPage'
 import { RankingsPage } from '@/pages/RankingsPage'
@@ -13,6 +14,7 @@ import { ArticlePage } from '@/pages/ArticlePage'
 import { SearchPage } from '@/pages/SearchPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { EditorPage } from '@/pages/EditorPage'
+import { EditorAnalyticsPage } from '@/pages/EditorAnalyticsPage'
 import { PrefetchOnMount } from '@/components/PrefetchOnMount'
 
 const queryClient = new QueryClient({
@@ -38,6 +40,7 @@ export default function App() {
               <GlobalLoadingIndicator />
               <TopNav />
               <PrefetchOnMount />
+              <AnalyticsBeacon />
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/brief" element={<BriefPage />} />
@@ -51,6 +54,11 @@ export default function App() {
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/editor" element={<EditorPage />} />
+                <Route path="/dashboard" element={<EditorAnalyticsPage />} />
+                <Route
+                  path="/editor/analytics"
+                  element={<Navigate to="/dashboard" replace />}
+                />
               </Routes>
               <Footer />
             </div>

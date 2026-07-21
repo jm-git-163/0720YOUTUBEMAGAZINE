@@ -59,6 +59,20 @@ export function TopNav() {
             ))}
             {isEditor && (
               <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `font-body text-label-md uppercase tracking-widest transition-colors hover:opacity-70 ${
+                    isActive
+                      ? 'border-b-2 border-accent-crimson pb-1 text-accent-crimson'
+                      : 'text-accent-crimson'
+                  }`
+                }
+              >
+                {t('nav.analytics')}
+              </NavLink>
+            )}
+            {isEditor && (
+              <NavLink
                 to="/editor"
                 className={({ isActive }) =>
                   `font-body text-label-md uppercase tracking-widest transition-colors hover:opacity-70 ${
@@ -137,6 +151,13 @@ export function TopNav() {
           ))}
           {isEditor ? (
             <>
+              <NavLink
+                to="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 font-body text-label-md uppercase tracking-widest text-accent-crimson"
+              >
+                {t('nav.analytics')}
+              </NavLink>
               <NavLink
                 to="/editor"
                 onClick={() => setMenuOpen(false)}

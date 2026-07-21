@@ -46,6 +46,7 @@ import {
   listArticles,
   updateArticle,
 } from './store'
+import { classifyPath, getDashboard, recordPageview } from './analytics'
 import type { AppLocale } from './openai'
 
 function formatCoverInsight(cover: VideoItem, lang: AppLocale): string {
@@ -451,6 +452,59 @@ app.delete('/api/editorial/:videoId', (c) => {
   if (existing) deleteArticle(existing.id)
   else hideVideo(videoId)
   return c.json({ ok: true })
+})
+
+app.post('/api/analytics/track', async (c) => {
+  try {
+    const body = (await c.req.json().catch(() => ({}))) as {
+      path?: string
+      contentType?: 'article' | 'page' | 'media'
+      contentId?: string
+      title?: string
+      referrer?: string
+      locale?: string
+      skipEditor?: boolean
+    }
+    // Editors should not inflate magazine traffic stats.
+    if (body.skipEditor && requireEditor(authHeader(c))) {
+      return c.json({ ok: true, skipped: true })
+    }
+    const pathname = (body.path ?? '').split('?')[0] || '/'
+    const classified = classifyPath(pathname)
+    if (!classified) return c.json({ ok: true, skipped: true })
+
+    await recordPageview({
+      path: pathname,
+      contentType: body.contentType ?? classified.contentType,
+      contentId: body.contentId ?? classified.contentId,
+      title: body.title,
+      referrer: body.referrer,
+      locale: body.locale,
+    })
+    return c.json({ ok: true })
+  } catch (err) {
+    console.error(err)
+    return c.json({ ok: false }, 500)
+  }
+})
+
+app.get('/api/analytics/dashboard', async (c) => {
+  if (!requireEditor(authHeader(c))) {
+    return c.json({ error: 'Editor login required' }, 403)
+  }
+  const month =
+    c.req.query('month') || new Date().toISOString().slice(0, 7)
+  const lang = normalizeLocale(c.req.query('lang'))
+  try {
+    const payload = await getDashboard(month, lang)
+    return c.json(payload)
+  } catch (err) {
+    console.error(err)
+    return c.json(
+      { error: err instanceof Error ? err.message : 'Analytics failed' },
+      500,
+    )
+  }
 })
 
 export { app }
